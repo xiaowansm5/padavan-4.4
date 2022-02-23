@@ -7,7 +7,7 @@
 
 / {
 	compatible = "mediatek,mt7621-soc";
-	model = "Xiaomi R3P";
+	model = "Xiaomi 4";
 
 	chosen {
 		bootargs = "console=ttyS0,115200";
@@ -33,12 +33,12 @@
 
 		wan {
 			label = "wan";
-			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
 		};
 
 		lan1 {
 			label = "lan1";
-			gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
 		};
 
 		lan2 {
@@ -46,10 +46,6 @@
 			gpios = <&gpio0 16 GPIO_ACTIVE_LOW>;
 		};
 
-		lan3 {
-			label = "lan3";
-			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
-		};
 	};
 
 	gpio-keys-polled {
@@ -93,29 +89,33 @@
 
 			partition@0 {
 				label = "Bootloader";
-				reg = <0x00000 0x40000>; /* 256k */
+				reg = <0x00000 0x80000>; /* 512k */
 			};
 
-			partition@40000 {
+			partition@80000 {
 				label = "CFG_Bdata";
-				reg = <0x40000 0x80000>; /* 512k */
-			};
-
-			partition@c0000 {
-				label = "Factory";
-				reg = <0xc0000 0x40000>; /* 256k */
+				reg = <0x80000 0x80000>; /* 512k */
 			};
 
 			partition@100000 {
-				label = "Reserved";
-				reg = <0x100000 0x100000>; /* 1024k */
+				label = "Factory";
+				reg = <0x100000 0x80000>; /* 512k */
 			};
 
+			partition@180000 {
+				label = "Crash";
+				reg = <0x180000 0x80000>; /* 512k */
+			};
+			
 			partition@200000 {
-				label = "firmware";
-				reg = <0x200000 0x1800000>; /* 24M */
+				label = "kernel_stock";
+				reg = <0x200000 0x400000>;
+			
 			};
-
+			partition@600000 {
+				label = "firmware";
+				reg = <0x600000 0x1400000>;
+			};
 
 			partition@1a00000 {
 				label = "Config";
@@ -129,12 +129,12 @@
 
 			partition@1e80000 {
 				label = "RWFS";
-				reg = <0x1e80000 0xe100000>;
+				reg = <0x1e80000 0x6100000>;
 			};
 
 			partition@all {
 				label = "ALL";
-				reg = <0x0 0xff80000>;
+				reg = <0x0 0x7f80000>;
 			};
 		};
 	};
