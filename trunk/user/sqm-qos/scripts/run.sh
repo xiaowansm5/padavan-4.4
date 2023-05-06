@@ -30,8 +30,7 @@ nvram commit
 rmmod hw_nat
 vlanenable="$(nvram get vlan_filter )"
 if [ "$vlanenable" -ne 0 ]; then
-vlanid="$(nvram get vlan_vid_cpu )"
-modprobe -q hw_nat wan_vid="$vlanid"
+modprobe hw_nat
 else
 modprobe hw_nat
 fi 
@@ -94,12 +93,13 @@ start_sqm_section() {
     
 if [ "$runmode" = "1" ]; then
 	runmode_1
-	/usr/lib/sqm/hwqos.sh start "$DOWNLINK" "$UPLINK" 80
+	/usr/lib/sqm/hwqos.sh start "$DOWNLINK" "$UPLINK" 80 0
 elif [ "$runmode" = "2" ]; then
 	/usr/lib/sqm/hwqos.sh stop
 	runmode_2
 elif [ "$runmode" = "3" ]; then
-	runmode_3
+	runmode_1
+	/usr/lib/sqm/hwqos.sh start "$DOWNLINK" "$UPLINK" 80 1
 else   
 	runmode_4
 fi
