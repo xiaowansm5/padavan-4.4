@@ -1192,6 +1192,10 @@ static unsigned int skb_to_hnat_info(struct sk_buff *skb,
 				entry.ipv6_5t_route.dport =
 					foe->ipv6_5t_route.dport;
 			}
+			
+			if (ct && (ct->status & IPS_SRC_NAT)) {
+ 				return -1;
+ 			}
 			entry.ipv6_5t_route.iblk2.dscp =
 				(ip6h->priority << 4 |
 				 (ip6h->flow_lbl[0] >> 4));
@@ -1702,10 +1706,16 @@ mtk_hnat_ipv6_nf_local_out(void *priv, struct sk_buff *skb,
 
 	if (unlikely(!skb_hnat_is_hashed(skb)))
 		return NF_ACCEPT;
+		
+	ip6h = ipv6_hdr(skb);
+
+        if (ip6h->nexthdr != NEXTHDR_IPIP) {
+                hnat_set_head_frags(state, skb, 1, hnat_set_alg);
+                return NF_ACCEPT;
+        }
 
 	entry = &hnat_priv->foe_table_cpu[skb_hnat_entry(skb)];
-	if (skb_hnat_reason(skb) == HIT_UNBIND_RATE_REACH) {
-		ip6h = ipv6_hdr(skb);
+	if (skb_hnat_reason(skb) == HIT_UNBIND_RATE_REACH) 
 		if (ip6h->nexthdr == NEXTHDR_IPIP) {
 			/* Map-E LAN->WAN: need to record orig info before fn. */
 			if (mape_toggle) {
@@ -1842,7 +1852,6 @@ static unsigned int
 mtk_hnat_ipv4_nf_local_out(void *priv, struct sk_buff *skb,
 			   const struct nf_hook_state *state)
 {
-	struct sk_buff *new_skb;
 	struct foe_entry *entry;
 	struct iphdr *iph;
 
@@ -1851,15 +1860,8 @@ mtk_hnat_ipv4_nf_local_out(void *priv, struct sk_buff *skb,
 
 	entry = &hnat_priv->foe_table_cpu[skb_hnat_entry(skb)];
 
-	if (unlikely(skb_headroom(skb) < FOE_INFO_LEN)) {
-		new_skb = skb_realloc_headroom(skb, FOE_INFO_LEN);
-		if (!new_skb) {
-			dev_info(hnat_priv->dev, "%s:drop\n", __func__);
-			return NF_DROP;
-		}
-		dev_kfree_skb(skb);
-		skb = new_skb;
-	}
+	if (unlikely(skb_headroom(skb) < FOE_INFO_LEN)) 
+		return NF_ACCEPT;
 
 	/* Make the flow from local not be bound. */
 	iph = ip_hdr(skb);
@@ -1988,4 +1990,3 @@ int mtk_hqos_ptype_cb(struct sk_buff *skb, struct net_device *dev,
 	return 0;
 }
 #endif
-
